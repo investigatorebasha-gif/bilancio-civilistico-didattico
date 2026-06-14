@@ -49,13 +49,15 @@ Servizi 42.000`,
   });
 
   it("assegna confidenza e spiegazione anche alle righe generiche riconosciute", () => {
-    const result = parseAccountingText("Servizi 42.000", "test");
+    const result = parseAccountingText("Servizi 42.000", "test", "traccia.txt");
 
     expect(result.accounts[0]).toEqual(
       expect.objectContaining({
         civilCodeCode: "CE.B.7",
         importConfidence: 82,
-        importExplanation: expect.stringContaining("servizi")
+        importExplanation: expect.stringContaining("servizi"),
+        importSource: "traccia.txt",
+        importSourceLine: "Servizi 42.000"
       })
     );
     expect(result.warnings[0]).toContain("Mappatura da confermare");

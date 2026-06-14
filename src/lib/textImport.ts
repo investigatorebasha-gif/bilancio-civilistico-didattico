@@ -85,7 +85,11 @@ const balanceRules: MappingRule[] = [
 
 const allRules = [...incomeRules, ...balanceRules];
 
-export const parseAccountingText = (text: string, idPrefix = "text"): TextImportResult => {
+export const parseAccountingText = (
+  text: string,
+  idPrefix = "text",
+  sourceName = "testo incollato"
+): TextImportResult => {
   const lines = text
     .split(/\r?\n|;/)
     .map((line) => line.replace(/^[\s\-*•]+/, "").trim())
@@ -124,6 +128,8 @@ export const parseAccountingText = (text: string, idPrefix = "text"): TextImport
       dueBeyond12Months: mapping.dueBeyond12Months,
       importConfidence: mapping.confidence,
       importExplanation: explainMapping(mapping),
+      importSource: sourceName,
+      importSourceLine: line,
       notes: mapping.note ? `${mapping.note} Estratta da testo.` : "Estratta da testo."
     });
 

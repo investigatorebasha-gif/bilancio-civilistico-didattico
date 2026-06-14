@@ -1,5 +1,6 @@
-import { Brain, ClipboardPaste, Plus, Replace } from "lucide-react";
+import { Brain, ClipboardPaste, FileUp, Plus, Replace } from "lucide-react";
 import { useMemo, useState } from "react";
+import { extractTextFromFile, type FileImportProgress } from "../lib/fileImport";
 import { parseAccountingText } from "../lib/textImport";
 import type { FiscalYearData, TextImportDetection } from "../types/accounting";
 
@@ -30,8 +31,12 @@ Imposte 13.000`;
 
 export function TextImportPanel({ data, onChange }: TextImportPanelProps) {
   const [text, setText] = useState("");
+  const [sourceName, setSourceName] = useState("testo incollato");
   const [lastAction, setLastAction] = useState("");
-  const result = useMemo(() => parseAccountingText(text), [text]);
+  const [fileWarnings, setFileWarnings] = useState<string[]>([]);
+  const [fileProgress, setFileProgress] = useState<FileImportProgress | undefined>();
+  const [isReadingFile, setIsReadingFile] = useState(false);
+  const result = useMemo(() => parseAccountingText(text, "text", sourceName), [sourceName, text]);
   const hasAccounts = result.accounts.length > 0;
 
   const applyDetection = (project: FiscalYearData, detection: TextImportDetection): FiscalYearData => ({
@@ -64,6 +69,28 @@ export function TextImportPanel({ data, onChange }: TextImportPanelProps) {
     );
   };
 
+  const handleFile = async (file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+
+    setIsReadingFile(true);
+    setFileWarnings([]);
+    setLastAction("");
+    try {
+      const imported = await extractTextFromFile(file, setFileProgress);
+      setText(imported.text);
+      setSourceName(imported.fileName);
+      setFileWarnings(imported.warnings);
+      setLastAction(`Testo estratto da ${imported.fileName}.`);
+      setFileProgress({ stage: "done", message: "Estrazione completata", progress: 1 });
+    } catch (error) {
+      setFileWarnings([error instanceof Error ? error.message : "Import file non riuscito."]);
+    } finally {
+      setIsReadingFile(false);
+    }
+  };
+
   return (
     <section className="grid gap-4 rounded-lg border border-line bg-white p-4 shadow-soft dark:border-stone-800 dark:bg-stone-900">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -77,20 +104,56 @@ export function TextImportPanel({ data, onChange }: TextImportPanelProps) {
             mappature probabili. Controlla sempre l'anteprima prima di generare il bilancio.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setText(exampleText)}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-bold hover:border-mint dark:border-stone-700"
-        >
-          <ClipboardPaste size={16} aria-hidden="true" />
-          Usa esempio testo
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-bold hover:border-mint dark:border-stone-700">
+            <FileUp size={16} aria-hidden="true" />
+            Carica PDF/foto/TXT
+            <input
+              type="file"
+              accept=".txt,text/plain,.pdf,application/pdf,image/*"
+              className="hidden"
+              onChange={(event) => handleFile(event.target.files?.[0])}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              setText(exampleText);
+              setSourceName("esempio testo");
+              setFileWarnings([]);
+              setLastAction("");
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-bold hover:border-mint dark:border-stone-700"
+          >
+            <ClipboardPaste size={16} aria-hidden="true" />
+            Usa esempio testo
+          </button>
+        </div>
       </div>
+
+      {(isReadingFile || fileProgress) && (
+        <div className="rounded-lg border border-line bg-stone-50 p-3 text-sm dark:border-stone-800 dark:bg-stone-950">
+          <div className="flex flex-wrap items-center justify-between gap-2 font-semibold">
+            <span>{fileProgress?.message ?? "Preparazione import file"}</span>
+            {fileProgress?.progress !== undefined && (
+              <span>{Math.round(fileProgress.progress * 100)}%</span>
+            )}
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
+            <div
+              className="h-full bg-mint transition-all"
+              style={{ width: `${Math.round((fileProgress?.progress ?? 0.08) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       <textarea
         value={text}
         onChange={(event) => {
           setText(event.target.value);
+          setSourceName("testo incollato");
+          setFileWarnings([]);
           setLastAction("");
         }}
         className="min-h-48 w-full rounded-lg border border-line bg-white p-3 text-sm leading-6 dark:border-stone-700 dark:bg-stone-950"
@@ -150,8 +213,16 @@ export function TextImportPanel({ data, onChange }: TextImportPanelProps) {
         </div>
       )}
 
-      {(result.warnings.length > 0 || result.ignoredLines.length > 0) && text && (
+      {(fileWarnings.length > 0 ||
+        result.warnings.length > 0 ||
+        result.ignoredLines.length > 0) &&
+        text && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+          {fileWarnings.map((warning) => (
+            <p key={warning} className="font-semibold">
+              {warning}
+            </p>
+          ))}
           {result.warnings.slice(0, 4).map((warning) => (
             <p key={warning} className="font-semibold">
               {warning}

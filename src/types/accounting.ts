@@ -55,6 +55,8 @@ export type AccountInput = {
   dueBeyond12Months?: boolean;
   importConfidence?: number;
   importExplanation?: string;
+  importSource?: string;
+  importSourceLine?: string;
   notes?: string;
 };
 
@@ -133,5 +135,12 @@ export type TextImportResult = {
   accounts: AccountInput[];
   detection: TextImportDetection;
   ignoredLines: string[];
+  warnings: string[];
+};
+
+export type ImportedTextSource = {
+  fileName: string;
+  fileType: "text" | "pdf" | "image";
+  text: string;
   warnings: string[];
 };

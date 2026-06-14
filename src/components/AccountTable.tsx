@@ -145,7 +145,7 @@ export function AccountTable({ accounts, onChange }: AccountTableProps) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-[1480px] w-full border-collapse text-sm">
+        <table className="min-w-[1640px] w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-stone-500 dark:border-stone-800 dark:text-stone-400">
               <th className="p-2">Conto inserito</th>
@@ -155,6 +155,7 @@ export function AccountTable({ accounts, onChange }: AccountTableProps) {
               <th className="p-2">Voce riclassificata proposta</th>
               <th className="p-2">Confidenza</th>
               <th className="p-2">Perche</th>
+              <th className="p-2">Origine</th>
               <th className="p-2 text-center">Entro 12 mesi</th>
               <th className="p-2 text-center">Oltre 12 mesi</th>
               <th className="p-2">Note</th>
@@ -241,6 +242,20 @@ export function AccountTable({ accounts, onChange }: AccountTableProps) {
                 </td>
                 <td className="max-w-56 p-2 text-xs text-stone-600 dark:text-stone-300">
                   {account.importExplanation ?? "Voce inserita o modificata manualmente."}
+                </td>
+                <td className="max-w-48 p-2 text-xs text-stone-600 dark:text-stone-300">
+                  {account.importSource ? (
+                    <>
+                      <span className="font-semibold">{account.importSource}</span>
+                      {account.importSourceLine && (
+                        <span className="block truncate" title={account.importSourceLine}>
+                          {account.importSourceLine}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    "Manuale"
+                  )}
                 </td>
                 <td className="p-2 text-center">
                   <input

@@ -12,6 +12,7 @@ dall'utente genera:
 - controlli finali, avvisi, totali, subtotali ed esportazioni.
 - importazione da testo libero: l'utente incolla l'esercizio o l'elenco conti e
   l'app propone voci, importi, natura e mappature.
+- importazione da file TXT, PDF e immagini/foto con OCR lato client.
 
 Nota: lo strumento e didattico e non sostituisce commercialista, revisore o consulente
 fiscale.
@@ -87,6 +88,13 @@ L'importazione da testo libero sta in `src/lib/textImport.ts`:
   ha scelto quella mappatura;
 - segnala righe non riconosciute invece di inventare valori.
 
+L'importazione da file sta in `src/lib/fileImport.ts`:
+
+- TXT: lettura diretta;
+- PDF: estrazione testo con PDF.js;
+- immagini/foto: OCR con Tesseract.js in italiano e inglese;
+- ogni voce importata conserva origine e riga sorgente.
+
 Le validazioni stanno in `src/lib/validators.ts`:
 
 - quadratura attivo/passivo;
@@ -95,6 +103,8 @@ Le validazioni stanno in `src/lib/validators.ts`:
 - requisiti forma abbreviata;
 - voci non mappate;
 - suggerimenti di quadratura quando attivo/passivo o impieghi/fonti non tornano;
+- controlli di qualita professionale: tracciabilita, coerenza tra schemi,
+  possibili duplicati e punteggio di prontezza consegna;
 - scadenze mancanti per crediti/debiti;
 - valori negativi o segni sospetti.
 

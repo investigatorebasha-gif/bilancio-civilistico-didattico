@@ -1,4 +1,5 @@
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { validateProfessionalReadiness } from "../lib/professionalChecks";
 import { validateProject } from "../lib/validators";
 import type { FiscalYearData, ValidationIssue } from "../types/accounting";
 import { formatSignedCurrency } from "../lib/formatters";
@@ -24,8 +25,10 @@ const icons = {
 
 export function ValidationPanel({ data }: ValidationPanelProps) {
   const issues = validateProject(data);
-  const errors = issues.filter((issue) => issue.severity === "error").length;
-  const warnings = issues.filter((issue) => issue.severity === "warning").length;
+  const professionalIssues = validateProfessionalReadiness(data);
+  const allIssues = [...issues, ...professionalIssues];
+  const errors = allIssues.filter((issue) => issue.severity === "error").length;
+  const warnings = allIssues.filter((issue) => issue.severity === "warning").length;
 
   return (
     <section className="grid gap-4 rounded-lg border border-line bg-white p-4 shadow-soft dark:border-stone-800 dark:bg-stone-900">
@@ -47,7 +50,7 @@ export function ValidationPanel({ data }: ValidationPanelProps) {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        {issues.map((issue) => {
+        {allIssues.map((issue) => {
           const Icon = icons[issue.severity];
           return (
             <article

@@ -7,5 +7,6 @@
 - Mantieni lingua italiana per interfaccia, README, messaggi e spiegazioni.
 - Le tabelle devono essere generate da dati e funzioni, non duplicate manualmente nei componenti.
 - L'importazione da testo libero deve restare deterministica lato client; se aggiungi parole chiave, confidenza o spiegazioni in `src/lib/textImport.ts`, aggiungi test.
+- L'importazione da file deve restare lato client per compatibilita GitHub Pages; non introdurre backend obbligatori.
 - L'assistente di quadratura deve suggerire controlli e cause probabili, non inventare valori di pareggio.
 - Prima di consegnare una modifica esegui almeno `npm run test` e `npm run build`.

@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #17201a;
+  background: #f8faf7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.table-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.statement-row-heading {
+  background: rgba(15, 118, 110, 0.12);
+  font-weight: 800;
+}
+
+.statement-row-section {
+  background: rgba(219, 229, 220, 0.45);
+  font-weight: 700;
+}
+
+.statement-row-subtotal,
+.statement-row-total,
+.statement-row-calculation {
+  font-weight: 800;
+}
+
+.statement-row-total {
+  border-top: 2px solid #0f766e;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-panel {
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}

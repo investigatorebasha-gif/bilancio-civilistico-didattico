@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { sampleData } from "../data/sampleData";
-import { checkAbbreviatedEligibility, validateIncomeStatement } from "../lib/validators";
+import {
+  checkAbbreviatedEligibility,
+  validateBalanceSheet,
+  validateIncomeStatement
+} from "../lib/validators";
 import type { FiscalYearData } from "../types/accounting";
 
 const clone = (data: FiscalYearData): FiscalYearData =>
@@ -40,5 +44,15 @@ describe("validazioni", () => {
     const issue = validateIncomeStatement(data).find((item) => item.id === "negative-costs");
 
     expect(issue?.severity).toBe("warning");
+  });
+
+  it("quando il bilancio non quadra propone suggerimenti di quadratura", () => {
+    const data = clone(sampleData);
+    data.accounts[0].amount += 1000;
+
+    const issue = validateBalanceSheet(data).find((item) => item.id === "ordinary-balance");
+
+    expect(issue?.severity).toBe("error");
+    expect(issue?.suggestions?.join(" ")).toContain("attivo supera il passivo");
   });
 });

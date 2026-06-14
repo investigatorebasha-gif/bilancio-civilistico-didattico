@@ -64,6 +64,13 @@ export function ValidationPanel({ data }: ValidationPanelProps) {
                       Differenza: {formatSignedCurrency(issue.amount, data.currency, data.settings.rounding)}
                     </p>
                   )}
+                  {issue.suggestions && issue.suggestions.length > 0 && (
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+                      {issue.suggestions.map((suggestion) => (
+                        <li key={suggestion}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </article>

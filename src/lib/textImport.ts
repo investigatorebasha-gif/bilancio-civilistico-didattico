@@ -7,11 +7,13 @@ import type {
 
 type MappingRule = {
   keywords: RegExp[];
+  keywordLabels: string[];
   nature: AccountNature;
   civilCodeCode: string;
   reclassifiedCode: string;
   dueWithin12Months?: boolean;
   dueBeyond12Months?: boolean;
+  confidence: number;
   note?: string;
 };
 
@@ -120,8 +122,16 @@ export const parseAccountingText = (text: string, idPrefix = "text"): TextImport
       reclassifiedCode: mapping.reclassifiedCode,
       dueWithin12Months: mapping.dueWithin12Months,
       dueBeyond12Months: mapping.dueBeyond12Months,
+      importConfidence: mapping.confidence,
+      importExplanation: explainMapping(mapping),
       notes: mapping.note ? `${mapping.note} Estratta da testo.` : "Estratta da testo."
     });
+
+    if (mapping.confidence < 85) {
+      warnings.push(
+        `Mappatura da confermare (${mapping.confidence}%): "${cleanAccountName(line, amount.raw)}"`
+      );
+    }
   });
 
   if (accounts.length === 0) {
@@ -178,17 +188,32 @@ function rule(
 ): MappingRule {
   return {
     keywords: keywordSources.map((source) => new RegExp(source, "i")),
+    keywordLabels: keywordSources.map((source) => source.replace(/\\/g, "")),
     nature,
     civilCodeCode,
     reclassifiedCode,
     dueWithin12Months: options.dueWithin12Months,
     dueBeyond12Months: options.dueBeyond12Months,
+    confidence: options.confidence ?? estimateConfidence(keywordSources, options),
     note: options.note
   };
 }
 
 const findMapping = (line: string): MappingRule | undefined =>
   allRules.find((mappingRule) => mappingRule.keywords.every((keyword) => keyword.test(line)));
+
+function estimateConfidence(
+  keywordSources: string[],
+  options: Partial<MappingRule>
+): number {
+  const base = keywordSources.length >= 2 ? 91 : 82;
+  const dueBonus = options.dueWithin12Months || options.dueBeyond12Months ? 4 : 0;
+  const specificBonus = keywordSources.some((source) => source.length > 18) ? 4 : 0;
+  return Math.min(base + dueBonus + specificBonus, 97);
+}
+
+const explainMapping = (mapping: MappingRule): string =>
+  `Riconosciuta per parole chiave: ${mapping.keywordLabels.join(", ")}. Proposta ${mapping.civilCodeCode} e ${mapping.reclassifiedCode}.`;
 
 const extractAmount = (line: string): { raw: string; value: number } | undefined => {
   const matches = Array.from(

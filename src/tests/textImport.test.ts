@@ -28,7 +28,9 @@ Servizi 42.000`,
           name: "Banca c/c attivo",
           amount: 37000,
           civilCodeCode: "SP.A.C.IV",
-          reclassifiedCode: "RF.AC.LI"
+          reclassifiedCode: "RF.AC.LI",
+          importConfidence: expect.any(Number),
+          importExplanation: expect.stringContaining("SP.A.C.IV")
         }),
         expect.objectContaining({
           name: "Crediti verso clienti entro 12 mesi",
@@ -44,6 +46,19 @@ Servizi 42.000`,
         })
       ])
     );
+  });
+
+  it("assegna confidenza e spiegazione anche alle righe generiche riconosciute", () => {
+    const result = parseAccountingText("Servizi 42.000", "test");
+
+    expect(result.accounts[0]).toEqual(
+      expect.objectContaining({
+        civilCodeCode: "CE.B.7",
+        importConfidence: 82,
+        importExplanation: expect.stringContaining("servizi")
+      })
+    );
+    expect(result.warnings[0]).toContain("Mappatura da confermare");
   });
 
   it("segnala righe con importo ma senza mappatura riconosciuta", () => {

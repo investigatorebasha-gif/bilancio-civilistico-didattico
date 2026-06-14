@@ -53,6 +53,8 @@ export type AccountInput = {
   reclassifiedCode?: string;
   dueWithin12Months?: boolean;
   dueBeyond12Months?: boolean;
+  importConfidence?: number;
+  importExplanation?: string;
   notes?: string;
 };
 
@@ -98,6 +100,7 @@ export type ValidationIssue = {
   message: string;
   severity: ValidationSeverity;
   amount?: Money;
+  suggestions?: string[];
 };
 
 export type AbbreviatedEligibilityStatus = "eligible" | "not_eligible" | "unknown";

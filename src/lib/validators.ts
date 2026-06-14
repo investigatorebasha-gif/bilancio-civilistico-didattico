@@ -109,6 +109,10 @@ export const validateBalanceSheet = (data: FiscalYearData): ValidationIssue[] =>
   const missingDueInfo = data.accounts.filter(
     (account) => accountNeedsDueInformation(account) && !hasDueInformation(account)
   );
+  const lowConfidenceAccounts = data.accounts.filter(
+    (account) =>
+      account.importConfidence !== undefined && account.importConfidence < 85
+  );
   const negativeBalanceAccounts = data.accounts.filter(
     (account) =>
       ["asset", "liability", "equity"].includes(account.nature) && account.amount < 0
@@ -121,10 +125,16 @@ export const validateBalanceSheet = (data: FiscalYearData): ValidationIssue[] =>
       message:
         Math.abs(ordinary.totals.balanceDifference ?? 0) <= EPSILON
           ? "Il bilancio ordinario quadra."
-          : "Il bilancio ordinario non quadra: controllare attivo, passivo e patrimonio netto.",
+          : "Il bilancio ordinario non quadra: usa i suggerimenti sotto per cercare l'errore.",
       severity:
         Math.abs(ordinary.totals.balanceDifference ?? 0) <= EPSILON ? "success" : "error",
-      amount: ordinary.totals.balanceDifference
+      amount: ordinary.totals.balanceDifference,
+      suggestions: buildOrdinaryBalanceSuggestions(
+        ordinary.totals.balanceDifference ?? 0,
+        ordinary.totals.profitDifference ?? 0,
+        unmapped.length,
+        lowConfidenceAccounts.length
+      )
     },
     {
       id: "profit-match",
@@ -143,10 +153,15 @@ export const validateBalanceSheet = (data: FiscalYearData): ValidationIssue[] =>
       message:
         Math.abs(reclassified.totals.balanceDifference ?? 0) <= EPSILON
           ? "Il riclassificato finanziario quadra."
-          : "Il riclassificato finanziario non quadra: verificare le mappature.",
+          : "Il riclassificato finanziario non quadra: verificare le mappature tra impieghi e fonti.",
       severity:
         Math.abs(reclassified.totals.balanceDifference ?? 0) <= EPSILON ? "success" : "error",
-      amount: reclassified.totals.balanceDifference
+      amount: reclassified.totals.balanceDifference,
+      suggestions: buildReclassifiedBalanceSuggestions(
+        reclassified.totals.balanceDifference ?? 0,
+        missingDueInfo.length,
+        lowConfidenceAccounts.length
+      )
     },
     {
       id: "abbreviated-eligibility",
@@ -190,6 +205,18 @@ export const validateBalanceSheet = (data: FiscalYearData): ValidationIssue[] =>
       label: "Scadenza crediti/debiti",
       message: "Crediti e debiti principali hanno una scadenza indicata.",
       severity: "success"
+    });
+  }
+
+  if (lowConfidenceAccounts.length > 0) {
+    issues.push({
+      id: "low-confidence-imports",
+      label: "Mappature da confermare",
+      message: `${lowConfidenceAccounts.length} voce/i importate da testo hanno confidenza inferiore all'85%.`,
+      severity: "warning",
+      suggestions: lowConfidenceAccounts
+        .slice(0, 4)
+        .map((account) => `${account.name}: controlla ${account.civilCodeCode ?? "voce civilistica"} e ${account.reclassifiedCode ?? "riclassificato"}.`)
     });
   }
 
@@ -271,3 +298,62 @@ export const validateProject = (data: FiscalYearData): ValidationIssue[] => [
   ...validateBalanceSheet(data),
   ...validateIncomeStatement(data)
 ];
+
+const buildOrdinaryBalanceSuggestions = (
+  difference: number,
+  profitDifference: number,
+  unmappedCount: number,
+  lowConfidenceCount: number
+): string[] => {
+  if (Math.abs(difference) <= EPSILON) {
+    return [];
+  }
+
+  const suggestions = [
+    difference > 0
+      ? "L'attivo supera il passivo: cerca passivita, fondi, debiti, riserve o utile non inseriti."
+      : "Il passivo supera l'attivo: cerca attivita mancanti come banca, crediti, rimanenze, immobilizzazioni o ratei attivi.",
+    "Controlla che l'utile/perdita dell'esercizio sia presente nel patrimonio netto alla voce IX."
+  ];
+
+  if (Math.abs(profitDifference) > EPSILON) {
+    suggestions.push("Prima correggi la differenza tra utile del conto economico e utile nel patrimonio netto.");
+  }
+
+  if (unmappedCount > 0) {
+    suggestions.push("Ci sono voci non mappate: completale prima di valutare la quadratura.");
+  }
+
+  if (lowConfidenceCount > 0) {
+    suggestions.push("Rivedi le voci importate da testo con confidenza bassa: possono essere nella sezione sbagliata.");
+  }
+
+  return suggestions;
+};
+
+const buildReclassifiedBalanceSuggestions = (
+  difference: number,
+  missingDueCount: number,
+  lowConfidenceCount: number
+): string[] => {
+  if (Math.abs(difference) <= EPSILON) {
+    return [];
+  }
+
+  const suggestions = [
+    difference > 0
+      ? "Gli impieghi superano le fonti: verifica fonti mancanti come debiti, mutui, TFR, fondi o capitale netto."
+      : "Le fonti superano gli impieghi: verifica impieghi mancanti come liquidita, crediti, rimanenze o immobilizzazioni.",
+    "Controlla che ogni voce patrimoniale abbia anche una voce riclassificata RF corretta."
+  ];
+
+  if (missingDueCount > 0) {
+    suggestions.push("Completa la scadenza entro/oltre 12 mesi: nel riclassificato cambia corrente o consolidato.");
+  }
+
+  if (lowConfidenceCount > 0) {
+    suggestions.push("Rivedi le mappature importate da testo con confidenza bassa prima di correggere i totali.");
+  }
+
+  return suggestions;
+};

@@ -83,6 +83,8 @@ L'importazione da testo libero sta in `src/lib/textImport.ts`:
   ricavi e dipendenti medi;
 - propone voce civilistica, voce riclassificata, natura e scadenza entro/oltre
   12 mesi tramite regole deterministiche;
+- assegna una percentuale di confidenza e una spiegazione leggibile del perche
+  ha scelto quella mappatura;
 - segnala righe non riconosciute invece di inventare valori.
 
 Le validazioni stanno in `src/lib/validators.ts`:
@@ -92,6 +94,7 @@ Le validazioni stanno in `src/lib/validators.ts`:
 - quadratura impieghi/fonti;
 - requisiti forma abbreviata;
 - voci non mappate;
+- suggerimenti di quadratura quando attivo/passivo o impieghi/fonti non tornano;
 - scadenze mancanti per crediti/debiti;
 - valori negativi o segni sospetti.
 

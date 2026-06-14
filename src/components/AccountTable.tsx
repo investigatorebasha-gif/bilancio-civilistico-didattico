@@ -145,7 +145,7 @@ export function AccountTable({ accounts, onChange }: AccountTableProps) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-[1180px] w-full border-collapse text-sm">
+        <table className="min-w-[1480px] w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-stone-500 dark:border-stone-800 dark:text-stone-400">
               <th className="p-2">Conto inserito</th>
@@ -153,6 +153,8 @@ export function AccountTable({ accounts, onChange }: AccountTableProps) {
               <th className="p-2">Natura</th>
               <th className="p-2">Voce civilistica proposta</th>
               <th className="p-2">Voce riclassificata proposta</th>
+              <th className="p-2">Confidenza</th>
+              <th className="p-2">Perche</th>
               <th className="p-2 text-center">Entro 12 mesi</th>
               <th className="p-2 text-center">Oltre 12 mesi</th>
               <th className="p-2">Note</th>
@@ -234,6 +236,12 @@ export function AccountTable({ accounts, onChange }: AccountTableProps) {
                     <option value="CE.VA.IMPOSTE">CE.VA.IMPOSTE · Imposte</option>
                   </select>
                 </td>
+                <td className="p-2">
+                  <ConfidenceBadge value={account.importConfidence} />
+                </td>
+                <td className="max-w-56 p-2 text-xs text-stone-600 dark:text-stone-300">
+                  {account.importExplanation ?? "Voce inserita o modificata manualmente."}
+                </td>
                 <td className="p-2 text-center">
                   <input
                     type="checkbox"
@@ -285,4 +293,19 @@ export function AccountTable({ accounts, onChange }: AccountTableProps) {
       )}
     </section>
   );
+}
+
+function ConfidenceBadge({ value }: { value?: number }) {
+  if (value === undefined) {
+    return <span className="text-xs text-stone-500">Manuale</span>;
+  }
+
+  const style =
+    value >= 90
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-100"
+      : value >= 80
+        ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100"
+        : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-100";
+
+  return <span className={`rounded-full px-2 py-1 text-xs font-bold ${style}`}>{value}%</span>;
 }

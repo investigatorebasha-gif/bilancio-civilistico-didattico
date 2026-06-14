@@ -115,7 +115,7 @@ export function TextImportPanel({ data, onChange }: TextImportPanelProps) {
 
       {hasAccounts && (
         <div className="overflow-x-auto rounded-lg border border-line dark:border-stone-800">
-          <table className="w-full min-w-[780px] border-collapse text-sm">
+          <table className="w-full min-w-[980px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-line bg-stone-50 text-left text-xs uppercase tracking-wide text-stone-500 dark:border-stone-800 dark:bg-stone-950">
                 <th className="p-2">Voce estratta</th>
@@ -123,6 +123,8 @@ export function TextImportPanel({ data, onChange }: TextImportPanelProps) {
                 <th className="p-2">Natura</th>
                 <th className="p-2">Civilistico</th>
                 <th className="p-2">Riclassificato</th>
+                <th className="p-2">Confidenza</th>
+                <th className="p-2">Perche</th>
               </tr>
             </thead>
             <tbody>
@@ -135,6 +137,12 @@ export function TextImportPanel({ data, onChange }: TextImportPanelProps) {
                   <td className="p-2">{account.nature}</td>
                   <td className="p-2">{account.civilCodeCode}</td>
                   <td className="p-2">{account.reclassifiedCode}</td>
+                  <td className="p-2">
+                    <ConfidenceBadge value={account.importConfidence} />
+                  </td>
+                  <td className="p-2 text-xs text-stone-600 dark:text-stone-300">
+                    {account.importExplanation}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -192,4 +200,19 @@ function Summary({ label, value }: { label: string; value: string }) {
       <p className="text-xl font-extrabold">{value}</p>
     </div>
   );
+}
+
+function ConfidenceBadge({ value }: { value?: number }) {
+  if (value === undefined) {
+    return <span className="text-xs text-stone-500">Manuale</span>;
+  }
+
+  const style =
+    value >= 90
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-100"
+      : value >= 80
+        ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100"
+        : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-100";
+
+  return <span className={`rounded-full px-2 py-1 text-xs font-bold ${style}`}>{value}%</span>;
 }
